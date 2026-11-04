@@ -45,6 +45,11 @@ function boot(html){
 (async()=>{
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   let enc;try{enc=await loadEnc()}catch{msg('読み込めませんでした。通信を確認してください。');return}
+  // 専用リンク（#k=合言葉）で開いたときは、入力なしで復号して、この端末に記憶する
+  const hm=location.hash.match(/^#k=(.+)$/);
+  if(hm){try{const key=await keyFromPw(decodeURIComponent(hm[1]).trim(),enc),html=await decrypt(key,enc);
+    try{const raw=new Uint8Array(await subtle.exportKey('raw',key));localStorage.setItem('kk',btoa(String.fromCharCode(...raw)))}catch{}
+    history.replaceState(null,'',location.pathname+location.search);boot(html);return}catch{}}
   let saved=null;try{saved=localStorage.getItem('kk')}catch{}
   if(saved){try{const key=await subtle.importKey('raw',b64d(saved),'AES-GCM',false,['decrypt']);boot(await decrypt(key,enc));return}catch{try{localStorage.removeItem('kk')}catch{}}}
   document.getElementById('f').onsubmit=async e=>{
