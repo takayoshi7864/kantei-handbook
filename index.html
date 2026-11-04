@@ -8,69 +8,52 @@
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>鑑定ハンドブック</title>
-<link rel="stylesheet" href="style.css">
+<style>
+#gate{max-width:360px;margin:22vh auto 0;padding:0 20px;font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;color:#1b2127}
+#gate h1{font-size:24px;margin:0 0 18px;letter-spacing:.06em}
+#gate input[type=password]{width:100%;padding:13px;font-size:17px;border:1px solid #9aa4ad;border-radius:10px;box-sizing:border-box}
+#gate label{display:block;margin:12px 0;font-size:14px}
+#gate button{width:100%;padding:13px;font-size:17px;border:0;border-radius:10px;background:#1f2937;color:#fff}
+#gate p{color:#b13f2d;min-height:1.5em;font-size:14px}
+@media (prefers-color-scheme:dark){body{background:#0f1317}#gate{color:#e6e9ec}#gate input[type=password]{background:#171c22;color:#e6e9ec;border-color:#2a323a}#gate button{background:#e6e9ec;color:#0f1317}}
+</style>
 </head>
 <body>
-<header id="bar">
-  <button id="btnToc" aria-label="メニュー">☰</button><button id="btnSearch" aria-label="検索">🔍</button>
-  <button id="btnPrev" aria-label="前のページ">◀</button>
-  <form id="jumpForm"><input id="pageInput" type="number" inputmode="numeric" min="1" aria-label="ページ"><span id="pageTotal"></span></form>
-  <button id="btnNext" aria-label="次のページ">▶</button>
-  <button id="btnZoomOut" aria-label="縮小">−</button>
-  <button id="btnZoomIn" aria-label="拡大">＋</button>
-  <button id="btnMark" aria-label="しおり">☆</button>
-</header>
-
-<main id="stage"><canvas id="canvas"></canvas>
-  <div id="empty" hidden>
-    <h1>鑑定ハンドブック</h1>
-    <p>PDFを一度読み込むと、この端末に保存されて<br>オフラインでもいつでも開けます。</p>
-    <button id="btnImport" class="primary">PDFを選択</button>
-  </div>
+<main id="gate">
+<h1>鑑定ハンドブック</h1>
+<form id="f"><input id="pw" type="password" autocomplete="current-password" placeholder="合言葉" autofocus>
+<label><input id="rem" type="checkbox" checked> この端末で記憶する</label>
+<button>開く</button><p id="msg"></p></form>
 </main>
-
-<aside id="drawer" hidden>
-  <div class="tabs">
-    <button data-tab="toc" class="on">目次</button>
-    <button data-tab="search">検索</button>
-    <button data-tab="star">本命星</button>
-    <button data-tab="marks">しおり</button>
-    <button data-tab="set">設定</button>
-    <button id="btnClose" aria-label="閉じる">✕</button>
-  </div>
-  <section id="tab-toc"><input id="tocFilter" type="search" placeholder="目次を絞り込み（例：五黄、八卦）"><ul id="tocList"></ul></section>
-
-  <section id="tab-search" hidden>
-    <form id="searchForm"><input id="q" type="search" placeholder="検索語（空白でAND検索）" enterkeyhint="search"></form>
-    <select id="scope" aria-label="検索する項目"></select>
-    <p id="searchMsg" class="hint"></p>
-    <ul id="results"></ul>
-    <details id="idxBox"><summary>検索用の索引</summary>
-      <p id="idxStatus" class="hint"></p>
-      <div class="row"><button id="idxBuild">索引を作成（OCR）</button><button id="idxStop" hidden>中断</button></div>
-      <progress id="idxBar" value="0" max="1" hidden></progress>
-      <div class="row"><button id="idxExport">書き出し</button><button id="idxImport">読み込み</button></div>
-      <p class="hint">OCRは端末内で実行されます（PCでの実行がおすすめ。数十分かかることがあります）。作成した索引は書き出して、スマホに読み込めます。</p>
-    </details>
-  </section>
-
-  <section id="tab-star" hidden>
-    <label>生年月日<input id="birth" type="date" value="1989-07-11"></label>
-    <div id="starOut"></div>
-  </section>
-
-  <section id="tab-marks" hidden><ul id="markList"></ul><p class="hint">☆ボタンで現在のページをしおりに追加／削除できます。</p></section>
-  <section id="tab-set" hidden>
-    <label>ページ補正（PDFのページ ＝ 本の印刷ページ ＋ この値）
-      <input id="offset" type="number" value="0"></label>
-    <p class="hint">目次の「p.9」を開いて1ページずれる場合は、ここを調整してください（例：表紙が1枚あるなら 1）。</p>
-    <label>表示（夜間モード）<select id="theme"><option value="auto">自動</option><option value="light">ライト</option><option value="dark">ダーク（色反転）</option></select></label>
-    <button id="btnReimport">PDFを入れ替える</button>
-  </section>
-</aside>
-
-<input id="file" type="file" accept="application/pdf" hidden>
-<input id="idxFile" type="file" accept="application/json,.json" hidden>
-<script type="module" src="app.js"></script>
+<script>
+const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const msg=t=>{const m=document.getElementById('msg');if(m)m.textContent=t};
+const subtle=crypto.subtle;
+async function loadEnc(){const r=await fetch('app.enc');return r.json()}
+async function decrypt(key,enc){return new TextDecoder().decode(await subtle.decrypt({name:'AES-GCM',iv:b64d(enc.iv)},key,b64d(enc.data)))}
+async function keyFromPw(pw,enc){const m=await subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return subtle.deriveKey({name:'PBKDF2',salt:b64d(enc.salt),iterations:enc.iter,hash:'SHA-256'},m,{name:'AES-GCM',length:256},true,['decrypt'])}
+function boot(html){
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  if(doc.title)document.title=doc.title;
+  doc.querySelectorAll('link[rel=stylesheet],style').forEach(n=>document.head.append(document.importNode(n,true)));
+  const scripts=[...doc.querySelectorAll('script')];scripts.forEach(s=>s.remove());
+  document.body.innerHTML='';
+  [...doc.body.childNodes].forEach(n=>document.body.append(document.importNode(n,true)));
+  for(const s of scripts){const e=document.createElement('script');e.textContent=s.textContent;document.body.append(e)}
+}
+(async()=>{
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  let enc;try{enc=await loadEnc()}catch{msg('読み込めませんでした。通信を確認してください。');return}
+  let saved=null;try{saved=localStorage.getItem('kk')}catch{}
+  if(saved){try{const key=await subtle.importKey('raw',b64d(saved),'AES-GCM',false,['decrypt']);boot(await decrypt(key,enc));return}catch{try{localStorage.removeItem('kk')}catch{}}}
+  document.getElementById('f').onsubmit=async e=>{
+    e.preventDefault();msg('');
+    try{const key=await keyFromPw(document.getElementById('pw').value.trim(),enc),html=await decrypt(key,enc);
+      if(document.getElementById('rem').checked){try{const raw=new Uint8Array(await subtle.exportKey('raw',key));localStorage.setItem('kk',btoa(String.fromCharCode(...raw)))}catch{}}
+      boot(html)}catch{msg('合言葉が違います。')}
+  };
+})();
+</script>
 </body>
 </html>
