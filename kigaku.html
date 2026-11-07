@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="九星気学盤">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}</script>
+<script>try{var emb=window.parent!==window,t;if(emb){document.documentElement.classList.add('emb');t=window.parent.document.documentElement.getAttribute('data-theme')}else t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
@@ -174,6 +174,15 @@ div.f{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--mu
 /* 欄のどこを押しても、年月日をまとめて選ぶ画面(カレンダー・ホイール)が開く */
 input.pick{position:relative;min-height:44px;cursor:pointer;min-width:9.6em}
 input.pick::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+</style>
+<style>
+.row{align-items:flex-end}
+.row:has(#d){flex-wrap:nowrap;gap:4px}
+.row:has(#d) .f{flex:1 1 0;min-width:0}
+.row:has(#d) .pickbtn{width:100%}
+.row:has(#d) #today{flex:0 0 auto;padding-inline:10px}
+.emb header{display:none}
+.emb body{padding-top:0;padding-inline:0}
 </style>
 <style>
 .row.tight{gap:4px;flex-wrap:nowrap}
@@ -469,12 +478,15 @@ const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v;}c
 (function(){
   var root=document.documentElement,btns=document.querySelectorAll('[data-theme-set]'),mq=window.matchMedia&&matchMedia('(prefers-color-scheme:dark)');
   function paint(){
-    var t=store.get('theme','auto');
+    var t=emb?parentTheme():store.get('theme','auto');
     if(t==='light'||t==='dark')root.dataset.theme=t;else root.removeAttribute('data-theme');
     btns.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.themeSet===(t==='light'||t==='dark'?t:'auto')));});
     var m=document.querySelector('meta[name=theme-color]');
     if(m)m.setAttribute('content',getComputedStyle(root).getPropertyValue('--bg').trim()||'#ffffff');
   }
+  var emb=document.documentElement.classList.contains('emb');
+  function parentTheme(){try{return window.parent.document.documentElement.getAttribute('data-theme')||'auto'}catch(e){return 'auto'}}
+  if(emb){try{new MutationObserver(paint).observe(window.parent.document.documentElement,{attributes:true,attributeFilter:['data-theme']})}catch(e){}}
   btns.forEach(function(b){b.addEventListener('click',function(){store.set('theme',b.dataset.themeSet);paint();});});
   if(mq&&mq.addEventListener)mq.addEventListener('change',paint);
   paint();
