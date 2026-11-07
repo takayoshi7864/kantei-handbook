@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="九星気学盤">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}</script>
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+</style>
+<title>九星気学盤</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* 配置: 南を上にした伝統の3x3方位盤を主役に、操作は上、個人鑑定は下に縦積み */
+:root{
+  --bg:#ffffff;--surface:#ffffff;--ink:#18212b;--muted:#5d6978;--line:#d3d9e0;
+  --indigo:#27466e;--on-indigo:#ffffff;
+  --gold:#8f6200;--gold-bg:#f6e7bd;
+  --kyo:#c1272d;--kyo-bg:#fbdcda;
+  --good:#17704f;--good-bg:#d6efe1;--on-good:#ffffff;--on-kyo:#ffffff;
+  --e-water:#1f68a3;--e-earth:#86601c;--e-wood:#2a7a48;--e-metal:#566270;--e-fire:#b8352b;
+  --f-disp:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  color-scheme:light;
+  --f-body:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+}
+/* ダークモード: 端末の設定に従う(自動)。右上のボタンで、ライト/ダークに固定もできる */
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#12161c;--surface:#1a2029;--ink:#e6eaf0;--muted:#9aa5b4;--line:#2f3a47;
+  --indigo:#8fb0e0;--on-indigo:#0f1722;
+  --gold:#e0b457;--gold-bg:#3a2f12;
+  --kyo:#ff8a85;--kyo-bg:#3b1b1d;
+  --good:#5fd3a0;--good-bg:#123325;--on-good:#08170f;--on-kyo:#1a0b0c;
+  --e-water:#6cb4ee;--e-earth:#d9a65a;--e-wood:#6fcf8f;--e-metal:#a9b6c4;--e-fire:#ff8f84;
+  color-scheme:dark}}
+:root[data-theme=dark]{
+  --bg:#12161c;--surface:#1a2029;--ink:#e6eaf0;--muted:#9aa5b4;--line:#2f3a47;
+  --indigo:#8fb0e0;--on-indigo:#0f1722;
+  --gold:#e0b457;--gold-bg:#3a2f12;
+  --kyo:#ff8a85;--kyo-bg:#3b1b1d;
+  --good:#5fd3a0;--good-bg:#123325;--on-good:#08170f;--on-kyo:#1a0b0c;
+  --e-water:#6cb4ee;--e-earth:#d9a65a;--e-wood:#6fcf8f;--e-metal:#a9b6c4;--e-fire:#ff8f84;
+  color-scheme:dark}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.themesw{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:none}
+.themesw button{border:0;border-radius:0;background:transparent;font-size:12px;min-height:32px;padding:4px 9px}
+.themesw button[aria-pressed=true]{background:var(--indigo);color:var(--on-indigo)}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--f-disp);font-weight:800;font-size:26px;letter-spacing:.08em;margin:0;line-height:1.2}
+.sub{color:var(--muted);font-size:12.5px;margin:2px 0 0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
+label.f{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--muted);letter-spacing:.04em;min-width:0}
+input[type=date],input[type=time]{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 8px;min-width:0;max-width:100%}
+button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer;min-height:40px}
+button:hover{border-color:var(--indigo)}
+:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--indigo);border-radius:8px;overflow:hidden}
+.tabs button{border:0;border-radius:0;background:transparent;color:var(--indigo);font-family:var(--f-disp);font-weight:800;font-size:18px;letter-spacing:.2em;min-height:44px}
+.tabs button[aria-pressed=true]{background:var(--indigo);color:var(--on-indigo)}
+.meta{font-size:13px;line-height:1.7;margin:0}
+.meta b{font-family:var(--f-disp);font-weight:800}
+.nav{display:flex;gap:8px}
+.nav button{flex:1}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.cell{border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:0;min-width:0;min-height:142px}
+.cell .top{display:flex;justify-content:space-between;align-items:center;width:100%;gap:4px}
+.cell .lab{font-size:13px;font-weight:700;letter-spacing:.04em}
+.cell .lab small{font-size:11px;font-weight:400;color:var(--muted);margin-left:2px}
+.cell .badge{font-size:12px;font-weight:700;line-height:1;padding:3px 5px;border-radius:4px}
+.cell .num{font-family:var(--f-disp);font-weight:800;font-size:46px;line-height:1.05;margin-top:2px}
+.cell .nm{font-size:11.5px;color:var(--muted)}
+.cell.kyo{background:var(--kyo-bg);border-color:var(--kyo)}
+.cell.kyo .badge{background:var(--kyo);color:var(--on-kyo)}
+.cell.good{background:var(--good-bg);border-color:var(--good)}
+.cell.good .badge{background:var(--good);color:var(--on-good)}
+.cell.best{border-width:3px;padding:4.5px}
+.cell.center{background:var(--bg);border-style:dashed}
+.e-水{color:var(--e-water)}.e-土{color:var(--e-earth)}.e-木{color:var(--e-wood)}.e-金{color:var(--e-metal)}.e-火{color:var(--e-fire)}
+.chips{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:2px}
+.chip{font-size:11.5px;line-height:1.4;padding:0 5px;border-radius:3px;border:1px solid currentColor;white-space:nowrap;font-weight:500}
+.chip.k{color:var(--kyo)}.chip.g{color:var(--good)}.chip.b{color:var(--on-good);background:var(--good);border-color:var(--good);font-weight:700}
+.chip.m{color:var(--indigo)}
+.cap{font-size:11.5px;color:var(--muted);margin:0;text-align:center}
+h2{font-family:var(--f-disp);font-weight:800;font-size:18px;letter-spacing:.08em;margin:0}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px}
+dt{color:var(--muted);font-size:12.5px;padding-top:2px;white-space:nowrap}
+dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.stars{font-family:var(--f-disp);font-weight:800;font-size:17px}
+.best-line{color:var(--good);font-weight:700}
+.warn{font-size:12.5px;color:var(--kyo);margin:0}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.tag-ex{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 5px;margin-left:6px}
+details summary{cursor:pointer;color:var(--muted);font-size:12.5px;min-height:32px;display:flex;align-items:center}
+details .opts{display:flex;flex-direction:column;gap:6px;padding-top:6px;font-size:13px}
+details .opts label{display:flex;gap:8px;align-items:center;min-height:32px}
+details .opts input{width:18px;height:18px}
+.foot{font-size:11.5px;color:var(--muted);line-height:1.7}
+.foot p{margin:0 0 4px}
+@media (prefers-reduced-motion:no-preference){.cell{transition:background .15s,border-color .15s}}
+</style>
+<style>
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;align-items:center}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.sw{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--line);background:var(--surface)}
+.sw.k{background:var(--kyo-bg);border-color:var(--kyo)}.sw.g{background:var(--good-bg);border-color:var(--good)}
+.sum{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;font-size:13.5px}
+.sum dt{font-weight:700;padding-top:0}
+.sum .k{color:var(--kyo)}.sum .g{color:var(--good)}
+.sum ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+.sum .none{color:var(--muted)}
+.dirn{font-size:12px;color:var(--muted);margin-left:2px;font-weight:400}
+</style>
+<style>
+.top,.boards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px;align-items:start}
+.bhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.bhead .nav{display:flex;gap:6px}
+.bhead .nav button{min-width:44px;padding:7px 0;font-size:20px;line-height:1}
+.board .meta{min-height:3.4em}
+</style>
+<style>.dstep{min-width:44px;padding:7px 0;font-size:20px;line-height:1;align-self:flex-end}#today{align-self:flex-end}</style>
+<style>.cell .ang{font-size:10.5px;color:var(--muted);align-self:flex-start;letter-spacing:.02em;font-variant-numeric:tabular-nums}</style>
+<style>select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 8px}</style>
+<style>.good-line{color:var(--good);font-weight:700}</style>
+<style>.gh{font-family:var(--f-disp);font-size:15px;font-weight:800;margin:12px 0 4px;padding-top:8px;border-top:1px solid var(--line)}</style>
+<style>.cell.split{border-color:var(--kyo)}.cell.split.best{border-color:var(--good)}.cell.split .badge{background:var(--kyo);color:var(--on-kyo)}</style>
+<style>.cell .badge{white-space:nowrap}.cell.split .badge{font-size:11px;padding:3px 4px}</style>
+<style>
+.brd svg{width:100%;height:auto;display:block}
+.sec{stroke:var(--line);stroke-width:1}
+.sec.k{fill:var(--kyo-bg)}.sec.g{fill:var(--good-bg)}.sec.n{fill:var(--surface)}
+.pal{fill:none;stroke:var(--ink);stroke-opacity:.45;stroke-width:1.5}
+.pal.best{stroke:var(--good);stroke-opacity:1;stroke-width:4}
+.ctr{fill:var(--surface);stroke:var(--ink);stroke-opacity:.45;stroke-width:1.5}
+svg text{text-anchor:middle;font-family:var(--f-body)}
+.td{font-size:11px;font-weight:700;fill:var(--ink)}
+.tn{font-family:var(--f-disp)!important;font-weight:800;font-size:34px}
+.tm{font-size:10.5px;fill:var(--muted)}
+.tl{font-size:10.5px;font-weight:700}
+.lk{fill:var(--kyo)}.lg{fill:var(--good)}.lm{fill:var(--indigo)}
+.tr{font-size:10px;fill:var(--muted)}
+svg .e-水{fill:var(--e-water)}svg .e-土{fill:var(--e-earth)}svg .e-木{fill:var(--e-wood)}svg .e-金{fill:var(--e-metal)}svg .e-火{fill:var(--e-fire)}
+</style>
+<style>.tl{font-size:13px}</style>
+<style>.tg{font-size:13px;font-weight:700}</style>
+<style>
+div.f{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--muted);letter-spacing:.04em;min-width:0}
+.sel3{display:flex;gap:6px;min-width:0}
+.sel3 select{min-width:0;min-height:44px;padding:7px 4px}
+#d-y,#b-y{width:5.6em}#d-m,#b-m,#d-d,#b-d{width:4.4em}
+.dstep{align-self:flex-end}
+</style>
+<style>
+.dstep{min-width:36px;padding:7px 0;align-self:flex-end}
+.sel3 select{font-size:15px;padding:7px 2px}
+#d-y,#b-y{width:5.2em}#d-m,#b-m,#d-d,#b-d{width:4em}
+</style>
+<style>
+.sum ul{gap:4px}
+.rw{display:grid;grid-template-columns:5.4em 3.6em minmax(0,1fr);align-items:baseline;column-gap:2px}
+.rw .sn{font-weight:700}
+.rw .sd{font-size:12px;color:var(--muted);white-space:nowrap}
+.rw .sr{min-width:0;overflow-wrap:anywhere}
+</style>
+<style>
+/* 欄のどこを押しても、年月日をまとめて選ぶ画面(カレンダー・ホイール)が開く */
+input.pick{position:relative;min-height:44px;cursor:pointer;min-width:9.6em}
+input.pick::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+</style>
+<style>
+.row.tight{gap:4px;flex-wrap:nowrap}
+.row.tight .dstep{min-width:30px;flex:0 0 auto}
+.row.tight input.pick{min-width:0;width:9.4em}
+.row.tight input[type=time]{min-width:0;width:7em}
+.row.tight label.f{flex:0 1 auto}
+@media (max-width:420px){.row.tight input.pick,.row.tight input[type=time]{font-size:14px;padding-inline:4px}}
+</style>
+<style>
+/* 本命星・月命星・傾斜・同会・最大吉方・吉方は、同じ書体・大きさにそろえる */
+#person dd .stars,#person dd.best-line,#person dd.good-line{font-family:var(--f-disp);font-size:17px;font-weight:800;line-height:1.5}
+</style>
+<style>
+.pickbtn{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;min-height:44px;width:9.4em;padding:7px 6px;text-align:center;cursor:pointer;white-space:nowrap}
+.row.tight .pickbtn{min-width:0;width:9.4em}
+@media (max-width:420px){.row.tight .pickbtn{font-size:14px}}
+.pk{position:fixed;inset:0;z-index:50;background:rgba(10,18,28,.45);display:flex;align-items:flex-end;justify-content:center;padding:0 0 env(safe-area-inset-bottom,0px)}
+.pk[hidden]{display:none}
+.pk-sheet{width:min(100%,420px);background:var(--surface);border:1px solid var(--line);border-radius:16px 16px 0 0;padding:14px max(16px,env(safe-area-inset-left,0px)) 16px;display:flex;flex-direction:column;gap:10px}
+@media (min-width:640px){.pk{align-items:center}.pk-sheet{border-radius:16px}}
+.pk-title{font-family:var(--f-disp);font-weight:800;font-size:17px;text-align:center}
+.pk-cols{position:relative;display:grid;grid-template-columns:1.25fr 1fr 1fr;height:200px;overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 30%,#000 70%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 30%,#000 70%,transparent 100%)}
+.pk-band{position:absolute;left:0;right:0;top:80px;height:40px;border-top:1.5px solid var(--indigo);border-bottom:1.5px solid var(--indigo);background:var(--bg);pointer-events:none;z-index:0}
+.pk-col{position:relative;z-index:1;height:200px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;padding:80px 0;box-sizing:border-box;overscroll-behavior:contain;cursor:grab;outline-offset:-2px;touch-action:pan-y}
+.pk-col::-webkit-scrollbar{display:none}
+.pk-i{height:40px;line-height:40px;text-align:center;scroll-snap-align:center;font-size:18px;color:var(--muted);user-select:none;font-variant-numeric:tabular-nums}
+.pk-i.sel{color:var(--ink);font-weight:700;font-size:20px}
+.pk-actions{display:flex;gap:8px;align-items:center}
+.pk-sp{flex:1}
+.pk-primary{background:var(--indigo);color:var(--on-indigo);border-color:var(--indigo);font-weight:700;min-width:84px}
+@media (prefers-reduced-motion:reduce){.pk-col{scroll-behavior:auto}}
+</style>
+<style>
+.tw{position:relative;display:block}
+.tw input[type=time]{width:100%;padding-right:30px;box-sizing:border-box;min-height:44px}
+.tw input[type=time]::-webkit-calendar-picker-indicator{display:none}
+.tbtn{position:absolute;right:2px;top:50%;transform:translateY(-50%);width:28px;height:38px;min-height:0;border:0;background:transparent;color:var(--muted);padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.tbtn:hover{color:var(--indigo)}
+.row.tight .tw{width:7.6em}
+.row.tight .tw input[type=time]{width:100%}
+.pk-time .pk-cols{grid-template-columns:1fr 1fr}
+.pk-time #pk-d{display:none}
+</style>
+<style>.rw .sub{font-size:12px;color:var(--muted);margin-left:6px;white-space:nowrap}.rw .sub.sub0{margin-left:0}</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>九星気学盤</h1>
+    <div class="themesw" role="group" aria-label="表示の色">
+      <button type="button" data-theme-set="auto" aria-pressed="true">自動</button>
+      <button type="button" data-theme-set="light" aria-pressed="false">ライト</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false">ダーク</button>
+    </div>
+  </header>
+
+  <div class="top">
+    <section class="panel" aria-label="日付の指定">
+      <h2>日付</h2>
+      <div class="row">
+        <button type="button" id="dprev" aria-label="1日戻る" class="dstep">‹</button>
+        <div class="f"><span id="d-lab">年月日</span><button type="button" id="d" class="pickbtn" aria-haspopup="dialog" aria-labelledby="d-lab d"></button></div>
+        <button type="button" id="dnext" aria-label="1日進む" class="dstep">›</button>
+        <button type="button" id="today">今日</button>
+      </div>
+      <div class="legend" aria-label="色の凡例"><span><i class="sw g"></i>吉方</span><span><i class="sw k"></i>凶方</span></div>
+    </section>
+
+    <section class="panel" aria-label="誕生日の人の鑑定">
+      <h2>生年月日</h2>
+      <div class="row tight">
+        <button type="button" id="bprev" aria-label="生年月日を1日戻す" class="dstep">‹</button>
+        <div class="f"><span id="bd-lab">生年月日</span><button type="button" id="bd" class="pickbtn" aria-haspopup="dialog" aria-labelledby="bd-lab bd"></button></div>
+        <button type="button" id="bnext" aria-label="生年月日を1日進める" class="dstep">›</button>
+        <label class="f" for="bt">出生時刻（任意）<span class="tw"><input type="time" id="bt"><button type="button" id="bt-pick" class="tbtn" aria-label="ドラムロールで時刻を選ぶ"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button></span></label>
+      </div>
+      <div class="row">
+        <label class="f" id="gwrap" for="bg" hidden>盤に使う性別（五黄同士のとき）<select id="bg"><option value="m">男性</option><option value="f">女性</option></select></label>
+      </div>
+      <p class="hint" id="bhint"></p>
+      <div id="person"></div>
+    </section>
+  </div>
+
+  <div class="boards">
+    <section class="panel board" aria-label="年盤">
+      <div class="bhead"><h2>年盤</h2><div class="nav"><button type="button" id="prev-year" aria-label="前の年">‹</button><button type="button" id="next-year" aria-label="次の年">›</button></div></div>
+      <p class="meta" id="meta-year"></p>
+      <div class="brd" id="grid-year"></div>
+      <dl class="sum" id="sum-year"></dl>
+    </section>
+    <section class="panel board" aria-label="月盤">
+      <div class="bhead"><h2>月盤</h2><div class="nav"><button type="button" id="prev-month" aria-label="前の月">‹</button><button type="button" id="next-month" aria-label="次の月">›</button></div></div>
+      <p class="meta" id="meta-month"></p>
+      <div class="brd" id="grid-month"></div>
+      <dl class="sum" id="sum-month"></dl>
+    </section>
+    <section class="panel board" aria-label="日盤">
+      <div class="bhead"><h2>日盤</h2><div class="nav"><button type="button" id="prev-day" aria-label="前の日">‹</button><button type="button" id="next-day" aria-label="次の日">›</button></div></div>
+      <p class="meta" id="meta-day"></p>
+      <div class="brd" id="grid-day"></div>
+      <dl class="sum" id="sum-day"></dl>
+    </section>
+  </div>
+
+</div>
+
+<div id="pk" class="pk" hidden role="dialog" aria-modal="true" aria-labelledby="pk-title">
+  <div class="pk-sheet">
+    <div class="pk-title" id="pk-title"></div>
+    <div class="pk-cols">
+      <div class="pk-band"></div>
+      <div class="pk-col" id="pk-y" tabindex="0" role="listbox" aria-label="年"></div>
+      <div class="pk-col" id="pk-m" tabindex="0" role="listbox" aria-label="月"></div>
+      <div class="pk-col" id="pk-d" tabindex="0" role="listbox" aria-label="日"></div>
+    </div>
+    <div class="pk-actions">
+      <button type="button" id="pk-clear">クリア</button>
+      <span class="pk-sp"></span>
+      <button type="button" id="pk-cancel">キャンセル</button>
+      <button type="button" id="pk-ok" class="pk-primary">決定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const RAD=Math.PI/180;
+const VS=[
+[[175347046,0,0],[3341656,4.6692568,6283.07585],[34894,4.6261,12566.1517],[3497,2.7441,5753.3849],[3418,2.8289,3.5231],[3136,3.6277,77713.7715],[2676,4.4181,7860.4194],[2343,6.1352,3930.2097],[1324,0.7425,11506.7698],[1273,2.0371,529.691],[1199,1.1096,1577.3435],[990,5.233,5884.927],[902,2.045,26.298],[857,3.508,398.149],[780,1.179,5223.694],[753,2.533,5507.553],[505,4.583,18849.228],[492,4.205,775.523],[357,2.92,0.067],[317,5.849,11790.629],[284,1.899,796.298],[271,0.315,10977.079],[243,0.345,5486.778],[206,4.806,2544.314],[205,1.869,5573.143],[202,2.458,6069.777],[156,0.833,213.299],[132,3.411,2942.463],[126,1.083,20.775],[115,0.645,0.98],[103,0.636,4694.003],[102,0.976,15720.839],[102,4.267,7.114],[99,6.21,2146.17],[98,0.68,155.42],[86,5.98,161000.69],[85,1.3,6275.96],[85,3.67,71430.7],[80,1.81,17260.15],[79,3.04,12036.46],[75,1.76,5088.63],[74,3.5,3154.69],[74,4.68,801.82],[70,0.83,9437.76],[62,3.98,8827.39],[61,1.82,7084.9],[57,2.78,6286.6],[56,4.39,14143.5],[56,3.47,6279.55],[52,0.19,12139.55],[52,1.33,1748.02],[51,0.28,5856.48],[49,0.49,1194.45],[41,5.37,8429.24],[41,2.4,19651.05],[39,6.17,10447.39],[37,6.04,10213.29],[37,2.57,1059.38],[36,1.71,2352.87],[36,1.78,6812.77],[33,0.59,17789.85],[30,0.44,83996.85],[30,2.74,1349.87],[25,3.16,4690.48]],
+[[628331966747,0,0],[206059,2.678235,6283.07585],[4303,2.6351,12566.1517],[425,1.59,3.523],[119,5.796,26.298],[109,2.966,1577.344],[93,2.59,18849.23],[72,1.14,529.69],[68,1.87,398.15],[67,4.41,5507.55],[59,2.89,5223.69],[56,2.17,155.42],[45,0.4,796.3],[36,0.47,775.52],[29,2.65,7.11],[21,5.34,0.98],[19,1.85,5486.78],[19,4.97,213.3],[17,2.99,6275.96],[16,0.03,2544.31],[16,1.43,2146.17],[15,1.21,10977.08],[12,2.83,1748.02],[12,3.26,5088.63],[12,5.27,1194.45],[12,2.08,4694],[11,0.77,553.57],[10,1.3,6286.6],[10,4.24,1349.87],[9,2.7,242.73],[9,5.64,951.72],[8,5.3,2352.87],[6,2.65,9437.76],[6,4.67,4690.48]],
+[[52919,0,0],[8720,1.0721,6283.0758],[309,0.867,12566.152],[27,0.05,3.52],[16,5.19,26.3],[16,3.68,155.42],[10,0.76,18849.23],[9,2.06,77713.77],[7,0.83,775.52],[5,4.66,1577.34],[4,1.03,7.11],[4,3.44,5573.14],[3,5.14,796.3],[3,6.05,5507.55],[3,1.19,242.73],[3,6.12,529.69],[3,0.31,398.15],[3,2.28,553.57],[2,4.38,5223.69],[2,3.75,0.98]],
+[[289,5.844,6283.076],[35,0,0],[17,5.49,12566.15],[3,5.2,155.42],[1,4.72,3.52],[1,5.3,18849.23],[1,5.97,242.73]],
+[[114,3.142,0],[8,4.13,6283.08],[1,3.84,12566.15]],
+[[1,3.14,0]]];
+function dTsec(y){
+  if(y<2005){const t=y-2000;return 63.86+0.3345*t-0.060374*t*t+0.0017275*t**3+0.000651814*t**4+0.00002373599*t**5;}
+  if(y<2050){const t=y-2000;return 62.92+0.32217*t+0.005589*t*t;}
+  return -20+32*((y-1820)/100)**2-0.5628*(2150-y);
+}
+function sunLon(jdUT,year){
+  const jde=jdUT+dTsec(year)/86400;
+  const tau=(jde-2451545)/365250, T=tau*10;
+  let L=0;
+  for(let k=0;k<VS.length;k++){let s=0;for(const [a,b,c] of VS[k])s+=a*Math.cos(b+c*tau);L+=s*Math.pow(tau,k);}
+  L=L/1e8/RAD; // 度
+  let lon=L+180;
+
+  lon+= -0.09033/3600;
+  const Om=(125.04452-1934.136261*T)*RAD, Ls=(280.4665+36000.7698*T)*RAD, Lm=(218.3165+481267.8813*T)*RAD;
+  const dpsi=(-17.2*Math.sin(Om)-1.32*Math.sin(2*Ls)-0.23*Math.sin(2*Lm)+0.21*Math.sin(2*Om))/3600;
+  const M=(357.52911+35999.05029*T)*RAD;
+  const R=1.000001018*(1-0.016708634*0.016708634)/(1+0.016708634*Math.cos(M+ (1.914602*Math.sin(M))*RAD));
+  lon+=dpsi-20.4898/3600/R;
+  return ((lon%360)+360)%360;
+}
+const msToJD=ms=>ms/86400000+2440587.5, jdToMs=jd=>(jd-2440587.5)*86400000;
+function findTerm(angle,year){
+  const start=Date.UTC(year,0,5,0,0);
+  let jd=msToJD(start)+((angle-285+360)%360)/360*365.2422;
+  for(let i=0;i<8;i++){let d=angle-sunLon(jd,year);d=((d+540)%360)-180;jd+=d*365.2422/360;}
+  return jdToMs(jd);
+}
+
+
+/* ===== 九星気学ロジック ===== */
+const STAR_NAME=['','一白水星','二黒土星','三碧木星','四緑木星','五黄土星','六白金星','七赤金星','八白土星','九紫火星'];
+const STAR_SHORT=['','一白','二黒','三碧','四緑','五黄','六白','七赤','八白','九紫'];
+const ELEM=['','水','土','木','木','土','金','金','土','火'];
+const PAL={'坎':{dir:'北',home:1},'坤':{dir:'南西',home:2},'震':{dir:'東',home:3},'巽':{dir:'南東',home:4},'中':{dir:'中央',home:5},'乾':{dir:'北西',home:6},'兌':{dir:'西',home:7},'艮':{dir:'北東',home:8},'離':{dir:'南',home:9}};
+const HOMEPAL=['','坎','坤','震','巽','中','乾','兌','艮','離'];
+const FLY=['中','乾','兌','艮','離','坎','坤','震','巽'];
+const OPP={'坎':'離','離':'坎','坤':'艮','艮':'坤','震':'兌','兌':'震','巽':'乾','乾':'巽'};
+const BR=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const HALF12=['','北寄り','東寄り','','東寄り','南寄り','','南寄り','西寄り','','西寄り','北寄り'];
+const BR_PAL=['坎','艮','艮','震','巽','巽','離','坤','坤','兌','乾','乾'];
+const STEM=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const GEN={'木':'火','火':'土','土':'金','金':'水','水':'木'};
+const wrap9=n=>(((n-1)%9)+9)%9+1;
+const mod=(a,n)=>((a%n)+n)%n;
+const JST=9*3600e3;
+function makeBoard(center,forward){const b={};FLY.forEach((p,k)=>{b[p]=wrap9(center+(forward?k:-k));});return b;}
+const yearStar=y=>wrap9(11-(y%9));
+function monthStar(yb,m){const g=yb%3;const st=g===0?8:g===1?5:2;return wrap9(st-(m-1));} // 年支: 子午卯酉=8, 辰戌丑未=5, 寅申巳亥=2
+const monthBranch=m=>(m+1)%12;
+const yearBranch=y=>mod(y-4,12);
+function relation(meStar,palStar){
+  const me=ELEM[meStar],p=ELEM[palStar];
+  if(me===p)return '比和';
+  if(GEN[p]===me)return '生気';
+  if(GEN[me]===p)return '退気';
+  return null;
+}
+const TERM_M={315:1,345:2,15:3,45:4,75:5,105:6,135:7,165:8,195:9,225:10,255:11,285:12};
+const _termCache={};
+function setsuOfYear(y){
+  if(_termCache[y])return _termCache[y];
+  const r=Object.keys(TERM_M).map(a=>({ms:findTerm(+a,y),m:TERM_M[a],a:+a})).sort((x,y2)=>x.ms-y2.ms);
+  return(_termCache[y]=r);
+}
+/* t: UTC ms。JST暦年 jy を基準に年・月の区切りを返す */
+function astroAt(t){
+  const jy=new Date(t+JST).getUTCFullYear();
+  const list=[...setsuOfYear(jy-1),...setsuOfYear(jy),...setsuOfYear(jy+1)];
+  let i=0;for(let k=0;k<list.length;k++){if(list[k].ms<=t)i=k;}
+  const cur=list[i],next=list[i+1];
+  const risshun=setsuOfYear(jy).find(x=>x.a===315).ms;
+  const year=t>=risshun?jy:jy-1;
+  const yS=setsuOfYear(year).find(x=>x.a===315).ms, yE=setsuOfYear(year+1).find(x=>x.a===315).ms;
+  return{year,m:cur.m,start:cur.ms,end:next.ms,yStart:yS,yEnd:yE};
+}
+const jdnOfJstDate=(y,m,d)=>Math.floor(Date.UTC(y,m-1,d)/86400000)+2440588;
+const ganzhiIdx=jdn=>mod(jdn+49,60);
+function dateOfJdn(jdn){const d=new Date((jdn-2440588)*86400000);return[d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate()];}
+function solsticeKouShi(y,angle){
+  const d=new Date(findTerm(angle,y)+JST);
+  const j=jdnOfJstDate(d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate());
+  const idx=ganzhiIdx(j);
+  return idx<=30?j-idx:j+(60-idx);
+}
+function dayStar(jdn,jy){
+  const ev=[];
+  for(let y=jy-1;y<=jy+1;y++){ev.push({j:solsticeKouShi(y,270),yang:true});ev.push({j:solsticeKouShi(y,90),yang:false});}
+  ev.sort((a,b)=>a.j-b.j);
+  let e=ev[0];for(const x of ev){if(x.j<=jdn)e=x;}
+  const n=jdn-e.j;
+  return e.yang?{star:wrap9(1+n),yang:true}:{star:wrap9(9-n),yang:false};
+}
+/* 入力: JST壁時計 */
+function jstToMs(y,m,d,hh,mm){return Date.UTC(y,m-1,d,hh||0,mm||0)-JST;}
+function analyze(y,m,d,hh,mm){
+  const t=jstToMs(y,m,d,hh,mm);
+  const a=astroAt(t);
+  const ys=yearStar(a.year);
+  const ms=monthStar(yearBranch(a.year),a.m);
+  const jdn=jdnOfJstDate(y,m,d);
+  const ds=dayStar(jdn,y);
+  const gi=ganzhiIdx(jdn);
+  return{t,astro:a,yStar:ys,mStar:ms,jdn,dStar:ds.star,yang:ds.yang,
+    yBr:yearBranch(a.year),mBr:monthBranch(a.m),dBr:gi%12,dGz:STEM[gi%10]+BR[gi%12],yGz:STEM[mod(a.year-4,10)]+BR[yearBranch(a.year)]};
+}
+const OPTS_DEFAULT={getsumei:true,nichiha:true,teii:true};
+/* kind: 'year'|'month'|'day' */
+function evaluate(info,kind,person,opts){
+  opts=opts||OPTS_DEFAULT;
+  const center=kind==='year'?info.yStar:kind==='month'?info.mStar:info.dStar;
+  const forward=kind==='day'?info.yang:true;
+  const board=makeBoard(center,forward);
+  const cells={};
+  FLY.forEach(p=>cells[p]={star:board[p],kyo:[],good:[],best:false,marks:[],partial:null});
+  const addK=(p,name)=>{if(p&&p!=='中'&&!cells[p].kyo.includes(name))cells[p].kyo.push(name);};
+  const palOf=s=>FLY.find(p=>board[p]===s);
+  const p5=palOf(5);
+  if(p5&&p5!=='中'){addK(p5,'五黄殺');addK(OPP[p5],'暗剣殺');}
+  // 破壊殺は盤ごとに別: 年盤=歳破、月盤=月破、日盤=日破
+  const brk=kind==='year'?info.yBr:kind==='month'?info.mBr:info.dBr;
+  // 破壊殺は対冲の十二支(30°)だけにかかる。四隅の宮は2つの十二支を含むため、片側のみ。
+  const tb=(brk+6)%12,tpal=BR_PAL[tb],half=HALF12[tb];
+  if(half){cells[tpal].partial=half;cells[tpal].partialBranch=tb;}else addK(tpal,'破壊殺');
+  const teiiAll=false;
+  let result=null;
+  if(person){
+    const{honmei,getsu}=person;
+    const ph=palOf(honmei),pg=palOf(getsu);
+    if(ph&&ph!=='中'){addK(ph,'本命殺');addK(OPP[ph],'本命的殺');}
+    if(pg&&pg!=='中'){addK(pg,'月命殺');addK(OPP[pg],'月命的殺');}
+    cells[ph].marks.push('本命星');cells[pg].marks.push('月命星');
+    const listFor=star=>{const o=[];FLY.forEach(p=>{if(p==='中')return;const r=relation(star,board[p]);if(r&&!cells[p].kyo.length)o.push({p,r});});return o;};
+    const gH=listFor(honmei),gG=listFor(getsu);
+    gH.forEach(x=>cells[x.p].good.push('本命'));
+    
+    const best=gH.filter(x=>gG.some(y=>y.p===x.p));
+    best.forEach(x=>cells[x.p].best=true);
+    const tilt=makeBoard(getsu,true);
+    const tp=FLY.find(p=>tilt[p]===honmei);
+    result={honmei,getsu,gH,gG,best:best.map(x=>({p:x.p,rH:x.r,rG:gG.find(y=>y.p===x.p).r})),tiltPal:tp,tiltStarOnBoard:board[tp],ph,pg,doukai:false,doukaiStar:wrap9(2*honmei-getsu),bestStars:bestStars(honmei,getsu),centerStar:center};
+  }
+  return{kind,center,forward,board,cells,result,teiiAll};
+}
+const SWITCH={1:9,2:6,3:4,4:3,6:2,7:8,8:7,9:1};
+function resolveGetsu(h,g,gender){if(h!==g)return g;if(h===5)return gender==='f'?6:7;return SWITCH[h];}
+function bestStars(h,g){const o=[];for(let s=1;s<=9;s++){if(s===h||s===g||s===5)continue;if(relation(h,s)&&relation(g,s))o.push(s);}return o;}
+function personFrom(y,m,d,hh,mm,gender){const a=analyze(y,m,d,hh,mm);const raw=a.mStar;const g=resolveGetsu(a.yStar,raw,gender);return{honmei:a.yStar,getsu:g,rawGetsu:raw,switched:g!==raw,info:a};}
+
+/* ===== 画面 ===== */
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+/* 表示の色: 自動(端末の設定に従う)/ライト/ダーク */
+(function(){
+  var root=document.documentElement,btns=document.querySelectorAll('[data-theme-set]'),mq=window.matchMedia&&matchMedia('(prefers-color-scheme:dark)');
+  function paint(){
+    var t=store.get('theme','auto');
+    if(t==='light'||t==='dark')root.dataset.theme=t;else root.removeAttribute('data-theme');
+    btns.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.themeSet===(t==='light'||t==='dark'?t:'auto')));});
+    var m=document.querySelector('meta[name=theme-color]');
+    if(m)m.setAttribute('content',getComputedStyle(root).getPropertyValue('--bg').trim()||'#ffffff');
+  }
+  btns.forEach(function(b){b.addEventListener('click',function(){store.set('theme',b.dataset.themeSet);paint();});});
+  if(mq&&mq.addEventListener)mq.addEventListener('change',paint);
+  paint();
+})();
+function jstNowParts(){const d=new Date(Date.now()+JST);return{y:d.getUTCFullYear(),m:d.getUTCMonth()+1,d:d.getUTCDate()};}
+function toDateStr(y,m,d){return y+'-'+pad(m)+'-'+pad(d);}
+function parseDate(s){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?[+m[1],+m[2],+m[3]]:null;}
+function parseTime(s){const m=/^(\d{2}):(\d{2})$/.exec(s||'');return m?[+m[1],+m[2]]:null;}
+function fmtMs(ms){const d=new Date(ms+JST);return d.getUTCFullYear()+'年'+pad(d.getUTCMonth()+1)+'月'+pad(d.getUTCDate())+'日 '+pad(d.getUTCHours())+':'+pad(d.getUTCMinutes());}
+function fmtMsY(ms){return fmtMs(ms);}
+const state={dates:{},gender:store.get('kg.g','m'),tab:'day',date:'',time:'12:00',birth:store.get('kg.birth',''),btime:store.get('kg.btime',''),
+  opts:{getsumei:store.get('kg.o1','1')==='1',nichiha:store.get('kg.o2','1')==='1',teii:store.get('kg.o3','1')==='1'}};
+{const n=jstNowParts();state.date=toDateStr(n.y,n.m,n.d);}
+state.dates={year:state.date,month:state.date,day:state.date};
+
+const GRID_ORDER=['巽','離','坤','震','中','兌','艮','坎','乾'];
+function starHtml(s){return'<span class="e-'+ELEM[s]+'">'+s+'</span>';}
+function starDir(ev,p){return'<span class="sn">'+STAR_NAME[ev.cells[p].star]+'</span><span class="sd">'+PAL[p].dir+'</span>';}
+function li(ev,p,txt){return'<li class="rw">'+starDir(ev,p)+'<span class="sr">'+(txt||'')+'</span></li>';}
+function palLabel(p){return PAL[p].dir+'('+p+')';}
+const KIND_LABEL={day:'日盤',month:'月盤',year:'年盤'};
+
+const ANG={'坎':'345°〜15°','艮':'15°〜75°','震':'75°〜105°','巽':'105°〜165°','離':'165°〜195°','坤':'195°〜255°','兌':'255°〜285°','乾':'285°〜345°'};
+const CW=['坎','艮','震','巽','離','坤','兌','乾'];
+const BR_OF={'坎':[0],'艮':[1,2],'震':[3],'巽':[4,5],'離':[6],'坤':[7,8],'兌':[9],'乾':[10,11]};
+const CANG={'坎':0,'艮':45,'震':90,'巽':135,'離':180,'坤':225,'兌':270,'乾':315};
+const BRCH=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const CX=200,CY=200,RO=180,RI=50;
+function pt(a,r){const t=a*Math.PI/180;return[CX-r*Math.sin(t),CY+r*Math.cos(t)];}
+function wedge(a1,a2){const p1=pt(a1,RO),p2=pt(a2,RO),p3=pt(a2,RI),p4=pt(a1,RI);
+  return'M'+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+'A'+RO+' '+RO+' 0 0 1 '+p2[0].toFixed(1)+' '+p2[1].toFixed(1)+'L'+p3[0].toFixed(1)+' '+p3[1].toFixed(1)+'A'+RI+' '+RI+' 0 0 0 '+p4[0].toFixed(1)+' '+p4[1].toFixed(1)+'Z';}
+function secClass(c,b){if(c.kyo.length)return'k';if(c.partial&&b===c.partialBranch)return'k';if(c.good.length)return'g';return'n';}
+const TAGPOS={'離':'top','坎':'bottom','震':'left','兌':'right','巽':'tl','坤':'tr','艮':'bl','乾':'br'};
+const HALVES={'艮':['北寄り','東寄り'],'巽':['東寄り','南寄り'],'坤':['南寄り','西寄り'],'乾':['西寄り','北寄り']};
+function usableHalf(p,c){return c.partial?HALVES[p].find(h=>h!==c.partial):'';}
+const LH=15;
+function tagCol(pos,lines,cx){
+  const n=lines.length;let out='';
+  lines.forEach((l,i)=>{
+    let x,y,anc='middle';
+    if(pos==='top'){x=cx;y=-3-(n-1-i)*LH;}
+    else if(pos==='bottom'){x=cx;y=416+i*LH;}
+    else if(pos==='left'){anc='end';x=-8;y=200-(n-1)*LH/2+i*LH+4;}
+    else if(pos==='right'){anc='start';x=408;y=200-(n-1)*LH/2+i*LH+4;}
+    else if(pos==='tl'){anc='end';x=68;y=66-(n-1-i)*LH;}
+    else if(pos==='tr'){anc='start';x=332;y=66-(n-1-i)*LH;}
+    else if(pos==='bl'){anc='end';x=68;y=346+i*LH;}
+    else {anc='start';x=332;y=346+i*LH;}
+    out+='<text class="tl '+l[1]+'" style="text-anchor:'+anc+'" x="'+x+'" y="'+y.toFixed(1)+'">'+l[0]+'</text>';
+  });
+  return out;
+}
+function secTag(b,text,cls){
+  const q=pt(b*30,212);
+  const anc=q[0]<CX?'end':'start';
+  return'<text class="tl '+cls+'" style="text-anchor:'+anc+'" x="'+q[0].toFixed(1)+'" y="'+(q[1]+4).toFixed(1)+'">'+text+'</text>';
+}
+function renderBoard(ev){
+  let secs='',outl='',txt='',rim='',tags='';
+  for(const p of CW){
+    const c=ev.cells[p];
+    const bs=BR_OF[p];
+    bs.forEach(b=>{secs+='<path class="sec '+secClass(c,b)+'" d="'+wedge(b*30-15,b*30+15)+'"/>';});
+    outl+='<path class="pal'+(c.best?' best':'')+'" d="'+wedge(bs[0]*30-15,bs[bs.length-1]*30+15)+'"/>';
+    const card=bs.length===1,ew=(p==='震'||p==='兌');
+    const lines=[];
+    if(!c.partial){
+      if(c.best)lines.push(['最大吉方','lg']);
+      else if(c.good.length&&!c.kyo.length)lines.push(['吉','lg']);
+    }
+    c.kyo.forEach(k=>lines.push([k,'lk']));
+    if(c.partial){
+      // 60°の宮は、30°ずつのエリアごとに、そのエリアの外側へ書く
+      const ob=BR_OF[p].find(b=>b!==c.partialBranch);
+      tags+=secTag(c.partialBranch,'破壊殺','lk');
+      if(!c.kyo.length&&c.good.length)tags+=secTag(ob,c.best?'最大吉方':'吉','lg');
+    }
+    const pos=TAGPOS[p];
+    if((pos==='top'||pos==='bottom')&&lines.length>5){
+      const h=Math.ceil(lines.length/2);
+      tags+=tagCol(pos,lines.slice(0,h),166)+tagCol(pos,lines.slice(h),234);
+    }else tags+=tagCol(pos,lines,200);
+    const total=34;
+    const r=ew?140:(card?124:121);
+    const [x,y]=pt(CANG[p],r);
+    let yy=y-total/2;
+    txt+='<text class="tn e-'+ELEM[c.star]+'" x="'+x.toFixed(1)+'" y="'+(yy+28).toFixed(1)+'">'+c.star+'</text>';
+    yy+=32;
+  }
+  for(let b=0;b<12;b++){const q=pt(b*30,RO+10);rim+='<text class="tr" x="'+q[0].toFixed(1)+'" y="'+(q[1]+4).toFixed(1)+'">'+BRCH[b]+'</text>';}
+  const cc=ev.cells['中'];
+  const ctr='<circle class="ctr" cx="'+CX+'" cy="'+CY+'" r="'+RI+'"/>'
+    +'<text class="tn e-'+ELEM[cc.star]+'" x="'+CX+'" y="'+(CY+12)+'">'+cc.star+'</text>';
+  $('grid-'+ev.kind).innerHTML='<svg viewBox="-80 -88 560 576" role="img" aria-label="'+KIND_LABEL[ev.kind]+'の方位盤。上が南">'+secs+outl+ctr+txt+rim+tags+'</svg>';
+}
+function pnote(ev,p){const c=ev.cells[p];return c.partial?'（'+usableHalf(p,c)+'のみ）':'';}
+function renderSummary(ev){
+  const hasP=!!ev.result;
+  const kyo=CW.filter(p=>ev.cells[p].kyo.length||ev.cells[p].partial).map(p=>{const c=ev.cells[p];const t=c.kyo.slice();if(c.partial)t.push('破壊殺（'+c.partial+'のみ）');return li(ev,p,t.join('・'));});
+  let h='<dt class="k">凶方</dt><dd><ul>'+(kyo.length?kyo.join(''):'<li class="none">なし</li>')+'</ul></dd>';
+  if(hasP){
+    const r=ev.result;
+    const best=CW.filter(p=>ev.cells[p].best).map(p=>{const x=r.best.find(y=>y.p===p);return li(ev,p,pnote(ev,p));});
+    const rest=CW.filter(p=>ev.cells[p].good.length&&!ev.cells[p].best).map(p=>{
+      return li(ev,p,pnote(ev,p));});
+    h+='<dt class="g">最大吉方</dt><dd><ul>'+(best.length?best.join(''):'<li class="none">なし</li>')+'</ul></dd>';
+    h+='<dt class="g">吉方</dt><dd><ul>'+(rest.length?rest.join(''):'<li class="none">なし</li>')+'</ul></dd>';
+  }else{
+    h+='<dt>吉方</dt><dd class="none">生年月日を入れると表示されます。</dd>';
+  }
+  if(ev.teiiAll)h+='<dt></dt><dd class="hint">この盤は全方位が定位対冲に当たるため、凶方に含めていません。</dd>';
+  $('sum-'+ev.kind).innerHTML=h;
+}
+function sameJstDate(ms){const x=new Date(ms+JST);return toDateStr(x.getUTCFullYear(),x.getUTCMonth()+1,x.getUTCDate())===curDS;}
+let curKind='day',curDS='';
+function metaHtml(info,kind){
+  curKind=kind;curDS=info.ds;
+  const a=info.astro;
+  let note='';
+  if(kind==='month'&&sameJstDate(a.start))note='<br><span class="warn">この日は '+fmtMs(a.start)+' に節入りします。12時時点の盤を表示しています。</span>';
+  if(kind==='month'&&sameJstDate(a.end))note='<br><span class="warn">この日は '+fmtMs(a.end)+' に節入りします。12時時点の盤を表示しています。</span>';
+  if(kind==='year'&&sameJstDate(a.yStart))note='<br><span class="warn">この日は '+fmtMs(a.yStart)+' に立春です。12時時点の盤を表示しています。</span>';
+  if(kind==='year'&&sameJstDate(a.yEnd))note='<br><span class="warn">この日は '+fmtMs(a.yEnd)+' に立春です。12時時点の盤を表示しています。</span>';
+  return metaCore(info,kind,a)+note;
+}
+function metaCore(info,kind,a){
+  const d=parseDate(info.ds);
+  const head='<b>'+fmtJp(info.ds)+'</b><br>';
+  if(kind==='day')return head+info.dGz+'日・中宮 '+STAR_NAME[info.dStar]+'・'+(info.yang?'陽遁（順飛）':'陰遁（逆飛）');
+  if(kind==='month')return head+a.year+'年（'+info.yGz+'） '+BR[info.mBr]+'月・中宮 '+STAR_NAME[info.mStar]+'・節入り '+fmtMs(a.start)+' 〜 '+fmtMs(a.end);
+  return head+a.year+'年（'+info.yGz+'）・中宮 '+STAR_NAME[info.yStar]+'・立春 '+fmtMsY(a.yStart)+' 〜 '+fmtMsY(a.yEnd);
+}
+
+function listStars(ev,arr){return arr.length?arr.map(x=>starDir(ev,x.p)+' '+x.r).join('<br>'):'なし';}
+
+function palName(s){return s===5?'中宮':HOMEPAL[s]+'宮';}
+function personRows(h,g,note){
+  const tb=makeBoard(g,true);const tp=FLY.find(p=>tb[p]===h);
+  const dk=wrap9(2*h-g),best=bestStars(h,g);
+  const rest=[];for(let s=1;s<=9;s++){if(s===h||s===g||s===5||best.includes(s))continue;if(relation(h,s))rest.push(STAR_NAME[s]);}
+  return'<dl>'
+    +'<dt>本命星</dt><dd><span class="stars">'+STAR_NAME[h]+'</span></dd>'
+    +'<dt>月命星</dt><dd><span class="stars">'+STAR_NAME[g]+'</span>'+(note||'')+'</dd>'
+    +'<dt>傾斜</dt><dd><span class="stars">'+STAR_NAME[PAL[tp].home]+'</span></dd>'
+    +'<dt>同会</dt><dd><span class="stars">'+STAR_NAME[dk]+'</span></dd>'
+    +'<dt>最大吉方</dt><dd class="best-line">'+(best.length?best.map(s=>STAR_NAME[s]).join('・'):'なし')+'</dd>'
+    +'<dt>吉方</dt><dd class="good-line">'+(rest.length?rest.join('<br>'):'なし')+'</dd>'
+    +'</dl>';
+}
+function renderPerson(ev,bp,boundary){
+  const el=$('person');
+  if(!bp){el.innerHTML='';return;}
+  if(bp.honmei===5&&bp.rawGetsu===5){
+    el.innerHTML='<h3 class="gh">男性の場合</h3>'+personRows(5,7)
+      +'<h3 class="gh">女性の場合</h3>'+personRows(5,6);
+    return;
+  }
+  const sw=bp.switched?'<span class="dirn">（'+STAR_NAME[bp.rawGetsu]+'から切替）</span>':'';
+  el.innerHTML=personRows(bp.honmei,bp.getsu,sw);
+}
+
+function render(){
+  const d=parseDate(state.date),tm=[12,0];
+  if(!d)return;
+  let bp=null,boundary='';
+  const bd=parseDate(state.birth);
+  if(bd){
+    const bt=parseTime(state.btime);
+    const hh=bt?bt[0]:12,mm=bt?bt[1]:0;
+    bp=personFrom(bd[0],bd[1],bd[2],hh,mm,state.gender);
+    if(!bt){
+      const a0=astroAt(jstToMs(bd[0],bd[1],bd[2],0,0)),a1=astroAt(jstToMs(bd[0],bd[1],bd[2],23,59));
+      if(a0.m!==a1.m)boundary='この日は節入りがあります（'+fmtMs(a1.start)+'）。出生時刻を入れると正確に判定できます。時刻なしの場合は12時として扱います。';
+    }
+  }
+  ['year','month','day'].forEach(k=>{
+    const info=infoFor(k);
+    const ev=evaluate(info,k,bp,state.opts);
+    $('meta-'+k).innerHTML=metaHtml(info,k);
+    renderBoard(ev);renderSummary(ev);
+    if(k==='year')renderPerson(ev,bp,boundary);
+  });
+  $('gwrap').hidden=!(bp&&bp.honmei===5&&bp.rawGetsu===5);
+  $('bg').value=state.gender;
+  $('bhint').innerHTML=bd?(fmtJp(state.birth)+'生まれ'+(boundary?'<br><span class="warn">'+boundary+'</span>':'')):'';
+  $('d').textContent=fmtJp(state.date);$('bd').textContent=state.birth?fmtJp(state.birth):'選ぶ';$('bt').value=state.btime;
+}
+
+function dim(y,m){return new Date(Date.UTC(y,m,0)).getUTCDate();}
+function shiftDate(ds,kind,n){
+  const d=parseDate(ds);let y=d[0],m=d[1],dd=d[2];
+  if(kind==='year'){y+=n;dd=Math.min(dd,dim(y,m));}
+  else if(kind==='month'){const t=(m-1)+n;y+=Math.floor(t/12);m=((t%12)+12)%12+1;dd=Math.min(dd,dim(y,m));}
+  else{const x=new Date(Date.UTC(y,m-1,dd)+n*86400000);y=x.getUTCFullYear();m=x.getUTCMonth()+1;dd=x.getUTCDate();}
+  return toDateStr(y,m,dd);
+}
+function infoFor(kind){
+  const ds=state.dates[kind];const d=parseDate(ds);
+  const info=analyze(d[0],d[1],d[2],12,0);
+  info.ds=ds;
+  return info;
+}
+function setAll(ds){state.date=ds;state.dates={year:ds,month:ds,day:ds};}
+function stepBase(dir){setAll(shiftDate(state.date,'day',dir));render();}
+function step(kind,dir){setAll(shiftDate(state.date,kind,dir));render();}
+
+
+
+const NOWY=jstNowParts().y;
+/* ===== ドラムロール式の年月日ピッカー ===== */
+const ITEM=40;
+const fmtJp=ds=>{const d=parseDate(ds);return d?d[0]+'年'+pad(d[1])+'月'+pad(d[2])+'日':'';};
+let pk=null;
+function pkItems(el,items){el.innerHTML=items.map(it=>'<div class="pk-i" role="option" data-v="'+it[0]+'">'+it[1]+'</div>').join('');}
+function pkIdx(el){const n=el.children.length;return Math.max(0,Math.min(n-1,Math.round(el.scrollTop/ITEM)));}
+function pkMark(el){const i=pkIdx(el);[...el.children].forEach((c,k)=>c.classList.toggle('sel',k===i));}
+function pkVal(el){const c=el.children[pkIdx(el)];return c?+c.dataset.v:0;}
+function pkSet(el,v,smooth){
+  let i=[...el.children].findIndex(c=>+c.dataset.v===v);if(i<0)i=0;
+  if(smooth)el.scrollTo({top:i*ITEM,behavior:'smooth'});else el.scrollTop=i*ITEM;
+  pkMark(el);
+}
+function pkDays(keep){
+  const el=$('pk-d'),y=pkVal($('pk-y')),m=pkVal($('pk-m'));
+  const n=dim(y,m),cur=keep||pkVal(el)||1;
+  let items=[];for(let i=1;i<=n;i++)items.push([i,pad(i)+'日']);
+  pkItems(el,items);pkSet(el,Math.min(cur,n),false);
+}
+function pkBind(el,onSettle){
+  let raf=0,t=0,drag=null;
+  el.addEventListener('scroll',()=>{
+    if(!raf)raf=requestAnimationFrame(()=>{raf=0;pkMark(el);});
+    clearTimeout(t);t=setTimeout(()=>{pkMark(el);onSettle&&onSettle();},140);
+  });
+  el.addEventListener('click',ev=>{const c=ev.target.closest('.pk-i');if(!c||drag&&drag.moved)return;el.scrollTo({top:[...el.children].indexOf(c)*ITEM,behavior:'smooth'});});
+  el.addEventListener('keydown',ev=>{
+    const k=ev.key;
+    if(k==='ArrowUp'||k==='ArrowDown'){ev.preventDefault();el.scrollTo({top:(pkIdx(el)+(k==='ArrowDown'?1:-1))*ITEM,behavior:'smooth'});}
+    else if(k==='Enter'){ev.preventDefault();pkDone();}
+  });
+  // マウスのドラット操作(タッチは標準のスクロールを使う)
+  el.addEventListener('pointerdown',ev=>{
+    if(ev.pointerType!=='mouse'||ev.button!==0)return;
+    drag={y:ev.clientY,top:el.scrollTop,moved:false};
+    el.style.scrollSnapType='none';el.setPointerCapture(ev.pointerId);
+  });
+  el.addEventListener('pointermove',ev=>{
+    if(!drag)return;
+    const dy=ev.clientY-drag.y;if(Math.abs(dy)>3)drag.moved=true;
+    el.scrollTop=drag.top-dy;
+  });
+  const end=()=>{
+    if(!drag)return;
+    const moved=drag.moved;el.style.scrollSnapType='';
+    if(moved)el.scrollTo({top:pkIdx(el)*ITEM,behavior:'smooth'});
+    setTimeout(()=>{drag=null;},0);
+  };
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+}
+function pkClose(){$('pk').hidden=true;pk=null;document.removeEventListener('keydown',pkEsc);}
+function pkEsc(ev){if(ev.key==='Escape')pkClose();}
+function pkDone(){
+  if(!pk)return;
+  const p2=n=>String(n).padStart(2,'0');
+  const ds=pk.mode==='time'?p2(pkVal($('pk-y')))+':'+p2(pkVal($('pk-m'))):toDateStr(pkVal($('pk-y')),pkVal($('pk-m')),pkVal($('pk-d')));
+  const f=pk.onDone;pkClose();f(ds);
+}
+function openPicker(o){
+  pk=o;
+  $('pk-title').textContent=o.title;
+  $('pk-clear').hidden=!o.clear;
+  $('pk').classList.toggle('pk-time',o.mode==='time');
+  if(o.mode==='time'){
+    const t=/^(\d{2}):(\d{2})$/.exec(o.value||'')||[0,'12','00'];
+    const hs=[],mi=[];for(let h=0;h<24;h++)hs.push([h,String(h).padStart(2,'0')+'時']);for(let m=0;m<60;m++)mi.push([m,String(m).padStart(2,'0')+'分']);
+    $('pk').hidden=false;
+    pkItems($('pk-y'),hs);pkItems($('pk-m'),mi);
+    pkSet($('pk-y'),+t[1],false);pkSet($('pk-m'),+t[2],false);
+    $('pk-ok').focus({preventScroll:true});
+    document.addEventListener('keydown',pkEsc);
+    return;
+  }
+  const d=parseDate(o.value)||[1990,1,1];
+  let ys=[];for(let y=o.ymin;y<=o.ymax;y++)ys.push([y,y+'年']);
+  let ms=[];for(let m=1;m<=12;m++)ms.push([m,pad(m)+'月']);
+  $('pk').hidden=false;
+  pkItems($('pk-y'),ys);pkItems($('pk-m'),ms);
+  pkSet($('pk-y'),Math.max(o.ymin,Math.min(o.ymax,d[0])),false);pkSet($('pk-m'),d[1],false);
+  pkDays(d[2]);
+  $('pk-ok').focus({preventScroll:true});
+  document.addEventListener('keydown',pkEsc);
+}
+pkBind($('pk-y'),()=>{if(pk&&pk.mode!=='time')pkDays();});pkBind($('pk-m'),()=>{if(pk&&pk.mode!=='time')pkDays();});pkBind($('pk-d'));
+$('pk-ok').addEventListener('click',pkDone);
+$('pk-cancel').addEventListener('click',pkClose);
+$('pk').addEventListener('click',ev=>{if(ev.target===$('pk'))pkClose();});
+$('pk-clear').addEventListener('click',()=>{if(!pk)return;const f=pk.onClear;pkClose();f&&f();});
+$('d').addEventListener('click',()=>openPicker({title:'年月日を選ぶ',value:state.date,ymin:1900,ymax:2100,clear:false,onDone:ds=>{setAll(ds);render();}}));
+$('bt-pick').addEventListener('click',()=>openPicker({mode:'time',title:'出生時刻を選ぶ',value:state.btime||'12:00',clear:true,
+  onDone:v=>{state.btime=v;store.set('kg.btime',v);render();},
+  onClear:()=>{state.btime='';store.set('kg.btime','');render();}}));
+$('bd').addEventListener('click',()=>openPicker({title:'生年月日を選ぶ',value:state.birth||'1990-01-01',ymin:1900,ymax:NOWY,clear:true,
+  onDone:ds=>{state.birth=ds;store.set('kg.birth',ds);render();},
+  onClear:()=>{state.birth='';store.set('kg.birth','');render();}}));
+function stepBirth(dir){
+  const base=parseDate(state.birth)?state.birth:'1990-01-01';
+  const ds=shiftDate(base,'day',dir);
+  state.birth=ds;store.set('kg.birth',ds);render();
+}
+$('bprev').addEventListener('click',()=>stepBirth(-1));
+$('bnext').addEventListener('click',()=>stepBirth(1));
+$('today').addEventListener('click',()=>{const n=jstNowParts();setAll(toDateStr(n.y,n.m,n.d));render();});
+$('dprev').addEventListener('click',()=>stepBase(-1));$('dnext').addEventListener('click',()=>stepBase(1));
+['year','month','day'].forEach(k=>{$('prev-'+k).addEventListener('click',()=>step(k,-1));$('next-'+k).addEventListener('click',()=>step(k,1));});
+
+$('bt').addEventListener('input',e=>{state.btime=e.target.value;store.set('kg.btime',state.btime);render();});
+$('bg').addEventListener('change',e=>{state.gender=e.target.value;store.set('kg.g',state.gender);render();});
+render();
+
+</script>
+</body>
+</html>
