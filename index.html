@@ -37,6 +37,8 @@ function boot(html){
   const doc=new DOMParser().parseFromString(html,'text/html');
   if(doc.title)document.title=doc.title;
   doc.querySelectorAll('link[rel=stylesheet],style').forEach(n=>document.head.append(document.importNode(n,true)));
+  // 出生時刻などの time/date 入力が、スマホで枠からはみ出すのを防ぐ
+  const fix=document.createElement('style');fix.textContent='input[type=time],input[type=date]{box-sizing:border-box;width:100%;max-width:100%;min-width:0;-webkit-appearance:none;appearance:none}';document.head.append(fix);
   const scripts=[...doc.querySelectorAll('script')];scripts.forEach(s=>s.remove());
   document.body.innerHTML='';
   [...doc.body.childNodes].forEach(n=>document.body.append(document.importNode(n,true)));
