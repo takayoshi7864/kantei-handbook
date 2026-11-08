@@ -807,5 +807,15 @@ $('bg').addEventListener('change',e=>{state.gender=e.target.value;store.set('kg.
 render();
 
 </script>
+<script>
+// 組み込み表示のとき、左右のなぞりを親（鑑定ハンドブック）に伝えて、タブを切り替えてもらう
+(function(){
+if(window.parent===window)return;
+let sx=0,sy=0,st=0,ok=false;
+const skip=el=>{for(;el&&el!==document.body;el=el.parentElement){const t=el.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return true;if(el.matches&&el.matches('[role=dialog],dialog,.mbox,.pk'))return true;const o=getComputedStyle(el).overflowX;if((o==='auto'||o==='scroll')&&el.scrollWidth>el.clientWidth+2)return true}return false};
+document.addEventListener('touchstart',e=>{if(e.touches.length!==1){ok=false;return}const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();ok=!skip(e.target)},{passive:true});
+document.addEventListener('touchend',e=>{if(!ok)return;ok=false;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)>=70&&Math.abs(dx)>Math.abs(dy)*1.8&&Date.now()-st<700)window.parent.postMessage({t:'kg-swipe',d:dx<0?1:-1},location.origin)},{passive:true});
+})();
+</script>
 </body>
 </html>
