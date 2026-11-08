@@ -808,13 +808,19 @@ render();
 
 </script>
 <script>
-// 組み込み表示のとき、左右のなぞりを親（鑑定ハンドブック）に伝えて、タブを切り替えてもらう
+// 組み込み表示のとき、左右のなぞりを親（鑑定ハンドブック）に伝えて、親の画面ごと動かしてもらう
 (function(){
 if(window.parent===window)return;
-let sx=0,sy=0,st=0,ok=false;
+let ok=false,ax=0,sx=0,sy=0,lx=0,lt=0,px=0,pt=0;
+const post=m=>{m.t&&window.parent.postMessage(m,location.origin)};
 const skip=el=>{for(;el&&el!==document.body;el=el.parentElement){const t=el.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return true;if(el.matches&&el.matches('[role=dialog],dialog,.mbox,.pk'))return true;const o=getComputedStyle(el).overflowX;if((o==='auto'||o==='scroll')&&el.scrollWidth>el.clientWidth+2)return true}return false};
-document.addEventListener('touchstart',e=>{if(e.touches.length!==1){ok=false;return}const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();ok=!skip(e.target)},{passive:true});
-document.addEventListener('touchend',e=>{if(!ok)return;ok=false;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)>=70&&Math.abs(dx)>Math.abs(dy)*1.8&&Date.now()-st<700)window.parent.postMessage({t:'kg-swipe',d:dx<0?1:-1},location.origin)},{passive:true});
+/* 画面ごと動くので、座標は画面基準(screenX)で測る */
+document.addEventListener('touchstart',e=>{if(e.touches.length!==1){ok=false;return}const t=e.touches[0];sx=lx=px=t.screenX;sy=t.screenY;lt=pt=Date.now();ax=0;ok=!skip(e.target)},{passive:true});
+document.addEventListener('touchmove',e=>{if(!ok||ax===2)return;const t=e.touches[0],dx=t.screenX-sx,dy=t.screenY-sy;
+  if(!ax&&Math.max(Math.abs(dx),Math.abs(dy))>10)ax=Math.abs(dx)>Math.abs(dy)*1.3?1:2;
+  if(ax===1){px=lx;pt=lt;lx=t.screenX;lt=Date.now();post({t:'kg-drag',dx})}},{passive:true});
+document.addEventListener('touchcancel',()=>{if(ok&&ax===1)post({t:'kg-cancel'});ok=false},{passive:true});
+document.addEventListener('touchend',e=>{if(!ok)return;ok=false;if(ax!==1)return;const dx=e.changedTouches[0].screenX-sx,dt=Math.max(1,lt-pt);post({t:'kg-end',dx,fast:Math.abs(lx-px)/dt>0.4&&Date.now()-lt<120})},{passive:true});
 })();
 </script>
 </body>
