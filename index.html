@@ -29,7 +29,7 @@
 const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const msg=t=>{const m=document.getElementById('msg');if(m)m.textContent=t};
 const subtle=crypto.subtle;
-async function loadEnc(){const r=await fetch('app.enc');return r.json()}
+async function loadEnc(){const r=await fetch('app.enc',{cache:'no-store'});return r.json()}
 async function decrypt(key,enc){return new TextDecoder().decode(await subtle.decrypt({name:'AES-GCM',iv:b64d(enc.iv)},key,b64d(enc.data)))}
 async function keyFromPw(pw,enc){const m=await subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
   return subtle.deriveKey({name:'PBKDF2',salt:b64d(enc.salt),iterations:enc.iter,hash:'SHA-256'},m,{name:'AES-GCM',length:256},true,['decrypt'])}
