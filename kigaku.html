@@ -145,7 +145,8 @@ svg text{text-anchor:middle;font-family:var(--f-body)}
 .tn{font-family:var(--f-disp)!important;font-weight:800;font-size:34px}
 .tm{font-size:10.5px;fill:var(--muted)}
 .tl{font-size:10.5px;font-weight:700}
-.lk{fill:var(--kyo)}.lg{fill:var(--good)}.lm{fill:var(--indigo)}
+.lk{fill:var(--kyo)}.lg{fill:var(--good)}.lm{fill:var(--indigo)}.lw{fill:var(--muted)}
+.pal.city{stroke:var(--indigo);stroke-opacity:1;stroke-width:4;stroke-dasharray:8 5}
 .tr{font-size:10px;fill:var(--muted)}
 svg .e-水{fill:var(--e-water)}svg .e-土{fill:var(--e-earth)}svg .e-木{fill:var(--e-wood)}svg .e-金{fill:var(--e-metal)}svg .e-火{fill:var(--e-fire)}
 </style>
@@ -182,6 +183,10 @@ input.pick::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:10
 .row:has(#d) .pickbtn{width:100%}
 .row:has(#d) #today{flex:0 0 auto;padding-inline:10px}
 .emb header{display:none}
+.ext{display:flex;flex-direction:column;gap:6px}
+.ext input.fi{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 8px;min-height:44px;box-sizing:border-box;width:100%}
+.ext .hint{margin:0}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink)}
 .emb body{padding-top:0;padding-inline:0}
 </style>
 <style>
@@ -431,7 +436,7 @@ const OPTS_DEFAULT={getsumei:true,nichiha:true,teii:true};
 function evaluate(info,kind,person,opts){
   opts=opts||OPTS_DEFAULT;
   const center=kind==='year'?info.yStar:kind==='month'?info.mStar:info.dStar;
-  const forward=kind==='day'?info.yang:true;
+  const forward=true; // 盤は年・月・日とも順飛。陰遁・陽遁は、日ごとの中宮の星の進み方だけを変える
   const board=makeBoard(center,forward);
   const cells={};
   FLY.forEach(p=>cells[p]={star:board[p],kyo:[],good:[],best:false,marks:[],partial:null});
@@ -461,6 +466,10 @@ function evaluate(info,kind,person,opts){
     const tilt=makeBoard(getsu,true);
     const tp=FLY.find(p=>tilt[p]===honmei);
     result={honmei,getsu,gH,gG,best:best.map(x=>({p:x.p,rH:x.r,rG:gG.find(y=>y.p===x.p).r})),tiltPal:tp,tiltStarOnBoard:board[tp],ph,pg,doukai:false,doukaiStar:wrap9(2*honmei-getsu),bestStars:bestStars(honmei,getsu),centerStar:center};
+  }
+  if(EXT&&kind==='month'){
+    if(EXT.monthMarks)EXT.monthMarks(info.astro.m-1).forEach(o=>{const p=DIRPAL[o.d];if(p&&p!=='中')(cells[p].kichi=cells[p].kichi||[]).push(o.t);});
+    if(state.kogo&&EXT.kogo){const pk=palOf(EXT.kogo(BR[info.yBr]));if(pk&&pk!=='中')addK(pk,'小児殺');}
   }
   return{kind,center,forward,board,cells,result,teiiAll};
 }
@@ -508,6 +517,9 @@ function starDir(ev,p){return'<span class="sn">'+STAR_NAME[ev.cells[p].star]+'</
 function li(ev,p,txt){return'<li class="rw">'+starDir(ev,p)+'<span class="sr">'+(txt||'')+'</span></li>';}
 function palLabel(p){return PAL[p].dir+'('+p+')';}
 const KIND_LABEL={day:'日盤',month:'月盤',year:'年盤'};
+/* 鑑定ハンドブックに組み込まれたとき、親から受け取る機能(行き先の都市・月盤の吉神・小児殺・生年月日の共有) */
+const EXT=(function(){try{return window.parent!==window&&window.parent.KHX||null}catch(e){return null}})();
+const DIRPAL={'北':'坎','北東':'艮','東':'震','東南':'巽','南東':'巽','南':'離','南西':'坤','西':'兌','北西':'乾'};
 
 const ANG={'坎':'345°〜15°','艮':'15°〜75°','震':'75°〜105°','巽':'105°〜165°','離':'165°〜195°','坤':'195°〜255°','兌':'255°〜285°','乾':'285°〜345°'};
 const CW=['坎','艮','震','巽','離','坤','兌','乾'];
@@ -550,7 +562,7 @@ function renderBoard(ev){
     const c=ev.cells[p];
     const bs=BR_OF[p];
     bs.forEach(b=>{secs+='<path class="sec '+secClass(c,b)+'" d="'+wedge(b*30-15,b*30+15)+'"/>';});
-    outl+='<path class="pal'+(c.best?' best':'')+'" d="'+wedge(bs[0]*30-15,bs[bs.length-1]*30+15)+'"/>';
+    outl+='<path class="pal'+(c.best?' best':'')+(state.cityPal===p?' city':'')+'" d="'+wedge(bs[0]*30-15,bs[bs.length-1]*30+15)+'"/>';
     const card=bs.length===1,ew=(p==='震'||p==='兌');
     const lines=[];
     if(!c.partial){
@@ -558,6 +570,7 @@ function renderBoard(ev){
       else if(c.good.length&&!c.kyo.length)lines.push(['吉','lg']);
     }
     c.kyo.forEach(k=>lines.push([k,'lk']));
+    (c.kichi||[]).forEach(k=>lines.push([k,k==='空'?'lw':'lg']));
     if(c.partial){
       // 60°の宮は、30°ずつのエリアごとに、そのエリアの外側へ書く
       const ob=BR_OF[p].find(b=>b!==c.partialBranch);
@@ -615,7 +628,7 @@ function metaHtml(info,kind){
 function metaCore(info,kind,a){
   const d=parseDate(info.ds);
   const head='<b>'+fmtJp(info.ds)+'</b><br>';
-  if(kind==='day')return head+info.dGz+'日・中宮 '+STAR_NAME[info.dStar]+'・'+(info.yang?'陽遁（順飛）':'陰遁（逆飛）');
+  if(kind==='day')return head+info.dGz+'日・中宮 '+STAR_NAME[info.dStar]+'・'+(info.yang?'陽遁':'陰遁');
   if(kind==='month')return head+a.year+'年（'+info.yGz+'） '+BR[info.mBr]+'月・中宮 '+STAR_NAME[info.mStar]+'・節入り '+fmtMs(a.start)+' 〜 '+fmtMs(a.end);
   return head+a.year+'年（'+info.yGz+'）・中宮 '+STAR_NAME[info.yStar]+'・立春 '+fmtMsY(a.yStart)+' 〜 '+fmtMsY(a.yEnd);
 }
@@ -649,6 +662,7 @@ function renderPerson(ev,bp,boundary){
 }
 
 function render(){
+  if(EXT&&EXT.setBirth)EXT.setBirth(state.birth,state.btime,state.gender);
   const d=parseDate(state.date),tm=[12,0];
   if(!d)return;
   let bp=null,boundary='';
@@ -804,6 +818,28 @@ $('dprev').addEventListener('click',()=>stepBase(-1));$('dnext').addEventListene
 
 $('bt').addEventListener('input',e=>{state.btime=e.target.value;store.set('kg.btime',state.btime);render();});
 $('bg').addEventListener('change',e=>{state.gender=e.target.value;store.set('kg.g',state.gender);render();});
+if(EXT){
+  const lg=document.querySelector('.legend'),box=document.createElement('div');
+  box.className='ext';
+  if(EXT.cities){
+    box.innerHTML='<label class="f" for="city">行き先の都市（東京都庁からの方位）<input id="city" class="fi" list="citylist" placeholder="都市名" autocomplete="off"></label><datalist id="citylist">'+Object.keys(EXT.cities).map(k=>'<option value="'+k.replace(/"/g,'&quot;')+'">').join('')+'</datalist><p class="hint" id="cmsg"></p>';
+  }
+  if(EXT.kogo)box.insertAdjacentHTML('beforeend','<label class="chk"><input type="checkbox" id="kogo"> 数え10歳未満（月盤に小児殺を表示）</label>');
+  lg.parentNode.insertBefore(box,lg);
+  state.kogo=store.get('kg.kogo','0')==='1';
+  const setCity=v=>{v=(v||'').trim();const dd=EXT.cities&&EXT.cities[v];state.cityPal=dd?DIRPAL[dd]:null;
+    if($('city')&&$('city').value!==v)$('city').value=v;
+    if($('cmsg'))$('cmsg').textContent=dd?v+'は東京都庁から'+dd+'の方位':'';render();};
+  if($('city'))$('city').addEventListener('input',e=>setCity(e.target.value));
+  if($('kogo')){$('kogo').checked=state.kogo;$('kogo').addEventListener('change',e=>{state.kogo=e.target.checked;store.set('kg.kogo',state.kogo?'1':'0');render();});}
+  const pull=()=>{const b=EXT.getBirth&&EXT.getBirth();if(!b)return;let ch=false;
+    if(b.birth&&b.birth!==state.birth){state.birth=b.birth;store.set('kg.birth',b.birth);ch=true}
+    if((b.btime||'')!==state.btime){state.btime=b.btime||'';store.set('kg.btime',state.btime);ch=true}
+    if(b.gender&&b.gender!==state.gender){state.gender=b.gender;store.set('kg.g',b.gender);ch=true}
+    if(ch)render();};
+  window.KGX={setCity,pull};
+  pull();
+}
 render();
 
 </script>
