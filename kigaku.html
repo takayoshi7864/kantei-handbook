@@ -183,6 +183,7 @@ input.pick::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:10
 .row:has(#d) .pickbtn{width:100%}
 .row:has(#d) #today{flex:0 0 auto;padding-inline:10px}
 .emb header{display:none}
+.tap svg [data-p]{cursor:pointer}
 .ext{display:flex;flex-direction:column;gap:6px}
 .ext input.fi{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 8px;min-height:44px;box-sizing:border-box;width:100%}
 .ext .hint{margin:0}
@@ -519,6 +520,7 @@ function palLabel(p){return PAL[p].dir+'('+p+')';}
 const KIND_LABEL={day:'日盤',month:'月盤',year:'年盤'};
 /* 鑑定ハンドブックに組み込まれたとき、親から受け取る機能(行き先の都市・月盤の吉神・小児殺・生年月日の共有) */
 const EXT=(function(){try{return window.parent!==window&&window.parent.KHX||null}catch(e){return null}})();
+const LASTEV={};
 const DIRPAL={'北':'坎','北東':'艮','東':'震','東南':'巽','南東':'巽','南':'離','南西':'坤','西':'兌','北西':'乾'};
 
 const ANG={'坎':'345°〜15°','艮':'15°〜75°','震':'75°〜105°','巽':'105°〜165°','離':'165°〜195°','坤':'195°〜255°','兌':'255°〜285°','乾':'285°〜345°'};
@@ -561,7 +563,7 @@ function renderBoard(ev){
   for(const p of CW){
     const c=ev.cells[p];
     const bs=BR_OF[p];
-    bs.forEach(b=>{secs+='<path class="sec '+secClass(c,b)+'" d="'+wedge(b*30-15,b*30+15)+'"/>';});
+    bs.forEach(b=>{secs+='<path class="sec '+secClass(c,b)+'" data-p="'+p+'" d="'+wedge(b*30-15,b*30+15)+'"/>';});
     outl+='<path class="pal'+(c.best?' best':'')+(state.cityPal===p?' city':'')+'" d="'+wedge(bs[0]*30-15,bs[bs.length-1]*30+15)+'"/>';
     const card=bs.length===1,ew=(p==='震'||p==='兌');
     const lines=[];
@@ -586,13 +588,13 @@ function renderBoard(ev){
     const r=ew?140:(card?124:121);
     const [x,y]=pt(CANG[p],r);
     let yy=y-total/2;
-    txt+='<text class="tn e-'+ELEM[c.star]+'" x="'+x.toFixed(1)+'" y="'+(yy+28).toFixed(1)+'">'+c.star+'</text>';
+    txt+='<text class="tn e-'+ELEM[c.star]+'" data-p="'+p+'" x="'+x.toFixed(1)+'" y="'+(yy+28).toFixed(1)+'">'+c.star+'</text>';
     yy+=32;
   }
   for(let b=0;b<12;b++){const q=pt(b*30,RO+10);rim+='<text class="tr" x="'+q[0].toFixed(1)+'" y="'+(q[1]+4).toFixed(1)+'">'+BRCH[b]+'</text>';}
   const cc=ev.cells['中'];
-  const ctr='<circle class="ctr" cx="'+CX+'" cy="'+CY+'" r="'+RI+'"/>'
-    +'<text class="tn e-'+ELEM[cc.star]+'" x="'+CX+'" y="'+(CY+12)+'">'+cc.star+'</text>';
+  const ctr='<circle class="ctr" data-p="中" cx="'+CX+'" cy="'+CY+'" r="'+RI+'"/>'
+    +'<text class="tn e-'+ELEM[cc.star]+'" data-p="中" x="'+CX+'" y="'+(CY+12)+'">'+cc.star+'</text>';
   $('grid-'+ev.kind).innerHTML='<svg viewBox="-80 -88 560 576" role="img" aria-label="'+KIND_LABEL[ev.kind]+'の方位盤。上が南">'+secs+outl+ctr+txt+rim+tags+'</svg>';
 }
 function pnote(ev,p){const c=ev.cells[p];return c.partial?'（'+usableHalf(p,c)+'のみ）':'';}
@@ -678,7 +680,7 @@ function render(){
   }
   ['year','month','day'].forEach(k=>{
     const info=infoFor(k);
-    const ev=evaluate(info,k,bp,state.opts);
+    const ev=evaluate(info,k,bp,state.opts);LASTEV[k]=ev;
     $('meta-'+k).innerHTML=metaHtml(info,k);
     renderBoard(ev);renderSummary(ev);
     if(k==='year')renderPerson(ev,bp,boundary);
@@ -837,6 +839,21 @@ if(EXT){
     if((b.btime||'')!==state.btime){state.btime=b.btime||'';store.set('kg.btime',state.btime);ch=true}
     if(b.gender&&b.gender!==state.gender){state.gender=b.gender;store.set('kg.g',b.gender);ch=true}
     if(ch)render();};
+  // 盤の方位をタップすると、その方位の星の象意・凶神と吉神の説明を、鑑定ハンドブック側に出す
+  if(EXT.detail){
+    const KEY={'本命的殺':'的殺','月命殺':'本命殺','月命的殺':'的殺'};
+    const showDet=(kind,p)=>{const ev=LASTEV[kind];if(!ev)return;const c=ev.cells[p];
+      const dir=p==='中'?'中央':(PAL[p].dir==='南東'?'東南':PAL[p].dir),L=[];
+      if(p!=='中'){
+        c.kyo.forEach(t=>L.push({t,k:KEY[t]||t}));
+        if(c.partial)L.push({t:'破壊殺',k:'破壊殺'});
+        if(ev.result){const x=ev.result.gH.find(y=>y.p===p);if(x){const r=x.r==='比和'?'毗和':x.r;L.push({t:r,k:r});}}
+        (c.kichi||[]).forEach(t=>L.push({t,k:t}));
+      }
+      EXT.detail({name:KIND_LABEL[kind],d:dir,s:c.star,L,half:c.partial||null});};
+    ['year','month','day'].forEach(k=>$('grid-'+k).addEventListener('click',e=>{const t=e.target.closest('[data-p]');if(t)showDet(k,t.dataset.p);}));
+    document.documentElement.classList.add('tap');
+  }
   window.KGX={setCity,pull};
   pull();
 }
